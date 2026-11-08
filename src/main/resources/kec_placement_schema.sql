@@ -1,0 +1,20 @@
+-- ==============================================================================
+-- KEC Placement & Campus Recruitment Eligibility System
+-- Integration Contract Reference (Owned & Maintained by Student 2 - Database Host)
+-- ==============================================================================
+-- NOTE:
+-- Student 1 (Application Host) does NOT create, execute, or alter this schema.
+-- This file serves solely as an integration contract reference to coordinate
+-- column names and types between Student 1's PlacementDAO and Student 2's remote DB.
+--
+-- Target DB: MySQL (Port 3306) / PostgreSQL (Port 5432) on OCI VM 2.
+--
+-- Expected tables managed by Student 2:
+--   1. students (student_id, register_no, full_name, department, email, cgpa, skills_raw, created_at)
+--   2. assessments (assessment_id, register_no, phase1_aptitude, phase2_coding, phase2_technical,
+--                   phase3_soft_skills, active_backlogs, assessment_date)
+--   3. drives (drive_id, drive_name, tier_category, min_aggregate, min_subject_score, drive_date)
+--   4. eligibility_results (result_id, register_no, tier_category, aggregate_score,
+--                           placement_band, placement_rank, is_eligible, eligibility_status,
+--                           pri_score, failure_reason, screened_at)
+-- ==============================================================================
