@@ -32,8 +32,11 @@ public class PlacementDAO {
      * Initializes the agreed schema tables if they do not exist yet.
      */
     public boolean initializeTablesIfNotExist() {
+        String idColumn = "postgresql".equalsIgnoreCase(DBConnection.getDbType())
+                ? "SERIAL PRIMARY KEY"
+                : "INT AUTO_INCREMENT PRIMARY KEY";
         String createStudents = "CREATE TABLE IF NOT EXISTS students ("
-                + "student_id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "student_id " + idColumn + ", "
                 + "register_no VARCHAR(20) NOT NULL UNIQUE, "
                 + "full_name VARCHAR(100) NOT NULL, "
                 + "department VARCHAR(50) NOT NULL, "
@@ -44,7 +47,7 @@ public class PlacementDAO {
                 + ")";
 
         String createAssessments = "CREATE TABLE IF NOT EXISTS assessments ("
-                + "assessment_id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "assessment_id " + idColumn + ", "
                 + "register_no VARCHAR(20) NOT NULL UNIQUE, "
                 + "phase1_aptitude INT, "
                 + "phase2_coding INT, "
@@ -55,7 +58,7 @@ public class PlacementDAO {
                 + ")";
 
         String createResults = "CREATE TABLE IF NOT EXISTS eligibility_results ("
-                + "result_id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "result_id " + idColumn + ", "
                 + "register_no VARCHAR(20) NOT NULL, "
                 + "tier_category VARCHAR(50) NOT NULL, "
                 + "aggregate_score DECIMAL(5, 2) NOT NULL, "
@@ -197,11 +200,38 @@ public class PlacementDAO {
             return 0;
         }
 
-        String sql = "INSERT INTO eligibility_results "
-                   + "(register_no, tier_category, aggregate_score, critical_score, placement_band, "
-                   + "placement_rank, is_eligible, eligibility_status, pri_score, remarks) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
+        String sql;
+        if ("postgresql".equalsIgnoreCase(DBConnection.getDbType())) {
+            sql = "INSERT INTO eligibility_results "
+                + "(register_no, tier_category, aggregate_score, critical_score, placement_band, "
+                + "placement_rank, is_eligible, eligibility_status, pri_score, remarks) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                + "ON CONFLICT (register_no, tier_category) DO UPDATE SET "
+                + "aggregate_score=EXCLUDED.aggregate_score, "
+                + "critical_score=EXCLUDED.critical_score, "
+                + "placement_band=EXCLUDED.placement_band, "
+                + "placement_rank=EXCLUDED.placement_rank, "
+                + "is_eligible=EXCLUDED.is_eligible, "
+                + "eligibility_status=EXCLUDED.eligibility_status, "
+                + "pri_score=EXCLUDED.pri_score, "
+                + "remarks=EXCLUDED.remarks, "
+                + "screened_at=CURRENT_TIMESTAMP";
+        } else {
+            sql = "INSERT INTO eligibility_results "
+                + "(register_no, tier_category, aggregate_score, critical_score, placement_band, "
+                + "placement_rank, is_eligible, eligibility_status, pri_score, remarks) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                + "ON DUPLICATE KEY UPDATE "
+                + "aggregate_score=VALUES(aggregate_score), "
+                + "critical_score=VALUES(critical_score), "
+                + "placement_band=VALUES(placement_band), "
+                + "placement_rank=VALUES(placement_rank), "
+                + "is_eligible=VALUES(is_eligible), "
+                + "eligibility_status=VALUES(eligibility_status), "
+                + "pri_score=VALUES(pri_score), "
+                + "remarks=VALUES(remarks), "
+                + "screened_at=CURRENT_TIMESTAMP";
+        }
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 

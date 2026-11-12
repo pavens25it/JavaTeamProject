@@ -40,3 +40,4 @@ application-local.properties
 *.key
 *.pem
 *.log
+src/main/resources/application.properties

@@ -83,7 +83,19 @@ public class MainApp {
             if (dbOnline) {
                 System.out.println("[Batch] DB Online. Syncing students and results...");
                 dao.initializeTablesIfNotExist();
+
                 dao.saveOrUpdateStudentsBatch(loadedCandidates);
+
+                List<Assessment> assessments = new ArrayList<>();
+                for (Student student : loadedCandidates) {
+                    if (student.getAssessment() != null) {
+                        assessments.add(student.getAssessment());
+                    }
+                }
+
+                int savedAssessments = dao.saveOrUpdateAssessmentsBatch(assessments);
+                System.out.println("[Batch] Assessments synchronized: " + savedAssessments);
+
                 for (ShortlistWorker.WorkerResult wr : latestResults) {
                     dao.saveEligibilityResultsBatch(wr.getResults());
                 }
